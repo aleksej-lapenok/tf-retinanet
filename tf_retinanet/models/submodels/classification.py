@@ -126,7 +126,7 @@ class ClassificationSubmodel(Submodel):
 		"""
 		return default_classification_model(num_classes=self.size(), **kwargs)
 
-	def loss(self):
+	def loss(self, sigma=None):
 		""" Define a loss function for the regression submodel.
 		"""
-		return focal()
+		return focal(sigma_var=sigma)

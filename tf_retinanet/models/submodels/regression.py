@@ -111,7 +111,7 @@ class BboxRegressionSubmodel(Submodel):
 		"""
 		return default_regression_model(num_values=self.size(), **kwargs)
 
-	def loss(self):
+	def loss(self, sigma=None):
 		""" Define a loss function for the regression submodel.
 		"""
-		return smooth_l1()
+		return smooth_l1(sigma_var=sigma)

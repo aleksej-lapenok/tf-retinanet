@@ -42,7 +42,7 @@ class Submodel(object):
 		return True
 
 
-	def loss(self):
+	def loss(self, sigma=None):
 		""" Return the loss functions to use for this submodel.
 		"""
 		raise NotImplementedError()

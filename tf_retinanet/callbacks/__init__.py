@@ -17,6 +17,8 @@ limitations under the License.
 from .common import *  # noqa: F401,F403
 
 import os
+import tensorflow as tf
+from .learning_rate_schedulers import *
 
 
 def get_callbacks(
@@ -26,6 +28,8 @@ def get_callbacks(
 	prediction_model,
 	validation_generator=None,
 	evaluation_callback=None,
+	lr=1e-5,
+	epochs=100,
 ):
 	""" Returns the callbacks indicated in the config.
 	Args
@@ -41,7 +45,7 @@ def get_callbacks(
 	callbacks = []
 
 	# Save snapshots of the model.
-	os.makedirs(os.path.join(config['snapshots_path'], config['project_name']))
+	os.makedirs(os.path.join(config['snapshots_path'], config['project_name']), exist_ok=True)
 	checkpoint = tf.keras.callbacks.ModelCheckpoint(
 		os.path.join(
 			config['snapshots_path'],
@@ -60,5 +64,7 @@ def get_callbacks(
 		evaluation_callback = evaluation_callback(validation_generator)
 		evaluation_callback = RedirectModel(evaluation_callback, prediction_model)
 		callbacks.append(evaluation_callback)
+
+	callbacks.append(tf.keras.callbacks.LearningRateScheduler(PolynomialDecay(initAlpha=lr, maxEpochs=epochs), verbose=1))
 
 	return callbacks

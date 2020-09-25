@@ -21,6 +21,7 @@ import os
 import sys
 
 import tensorflow as tf
+import tensorflow_addons as tfa
 
 
 # Allow relative imports when being executed as script.
@@ -126,6 +127,9 @@ def main(args=None):
 	training_model   = model
 	prediction_model = models.retinanet.retinanet_bbox(training_model)
 
+	# Parse training parameters.
+	train_config = config['train']
+
 	# Create the callbacks.
 	callbacks = get_callbacks(
 		config['callbacks'],
@@ -134,6 +138,8 @@ def main(args=None):
 		prediction_model,
 		validation_generator,
 		evaluation_callback,
+		lr=float(config['train']['lr']),
+		epochs=train_config['epochs'],
 	)
 
 	# Print model.
@@ -141,16 +147,16 @@ def main(args=None):
 
 	loss = {}
 	for submodel in submodels:
-		loss[submodel.get_name()] = submodel.loss()
+		sigma = training_model.add_weight(dtype=tf.float32, name='sigma_' + submodel.get_name(),
+										  initializer=tf.constant_initializer(1),
+										  trainable=True)
+		loss[submodel.get_name()] = submodel.loss(sigma)
 
 	# Compile model.
 	training_model.compile(
 		loss=loss,
-		optimizer=tf.keras.optimizers.Adam(lr=float(config['train']['lr']))
+		optimizer=tfa.optimizers.SGDW(lr=float(config['train']['lr']), momentum=0.9, nesterov=True, weight_decay=1e4)
 	)
-
-	# Parse training parameters.
-	train_config = config['train']
 
 	# Dump the training config in the same folder as the weights.
 	dump_yaml(config)
